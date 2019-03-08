@@ -1,10 +1,10 @@
 defmodule PlugLti do
   @moduledoc """
   A Plug to verify signed LTI requests. Currently only tested on EdX, pull
-  requests to make it work with other services, with tests, are welcome. 
-  
+  requests to make it work with other services, with tests, are welcome.
+
   Configure the LTI secret in the mix config file, for example
-      
+
       config :plug_lti,
         lti_secret: "secret"
 
@@ -57,27 +57,27 @@ defmodule PlugLti do
 
   def verify_signature(conn) do
     try do
-      signature = conn 
+      signature = conn
         |> Conn.fetch_query_params
         |> ensure_has_signature
         |> signature_base_string
         |> hmac_signature
-      
+
       # assert that signature provided equals signature calculated
       if signature != conn.params["oauth_signature"], do: raise SignatureMismatch
 
       %{conn | method: "GET"}
 
-    rescue 
-      e in [NoSignature, SignatureMismatch] -> 
+    rescue
+      e in [NoSignature, SignatureMismatch] ->
       Logger.info "PlugLti: " <> Exception.message(e)
       conn
         |> Conn.put_resp_header("content-type", "text/plain; charset=utf-8")
-        |> Conn.send_resp(Plug.Conn.Status.code(:forbidden), 
+        |> Conn.send_resp(Plug.Conn.Status.code(:forbidden),
           "Missing or mismatched OAuth signature in header")
         |> Conn.halt
 
-      e in [MissingSecret] -> 
+      e in [MissingSecret] ->
         Logger.info "PlugLti: " <> Exception.message(e)
         Conn.halt(conn)
 
@@ -87,29 +87,29 @@ defmodule PlugLti do
 
   def ensure_has_signature(conn = %Plug.Conn{params: %{"oauth_signature" => _}}), do: conn
   def ensure_has_signature(_), do: raise NoSignature
-  
+
   def hmac_signature(str) do
     secret = Application.get_env(:plug_lti, :lti_secret)
     if !is_binary(secret), do: raise MissingSecret
-    :crypto.hmac(:sha, secret <> "&", str) |> Base.encode64 end 
+    :crypto.hmac(:sha, secret <> "&", str) |> Base.encode64 end
   def signature_base_string(conn) do
     method = "POST"
     url = req_url(conn)
     params = proc_params(conn.params)
 
-    [method, url, params] 
-      |> Enum.map(&(URI.encode_www_form/1))
+    [method, url, params]
+      |> Enum.map(&(:http_uri.encode/1))
       |> Enum.join("&")
   end
 
   def proc_params(params) do
     params
       |> Enum.filter(&(!Enum.member?(@exclude_params, elem(&1, 0))))
-      |> Enum.map(fn({param, value}) -> 
-          "#{URI.encode_www_form( ensure_string(param) )}=#{
-            URI.encode_www_form( ensure_string(value ))}" 
-        end) 
-      |> Enum.sort 
+      |> Enum.map(fn({param, value}) ->
+          "#{:http_uri.encode( ensure_string(param) )}=#{
+            :http_uri.encode( ensure_string(value ))}"
+        end)
+      |> Enum.sort
       |> Enum.join("&")
   end
 
@@ -117,4 +117,4 @@ defmodule PlugLti do
   def ensure_string(x) when is_float(x), do: Float.to_string(x)
   def ensure_string(x) when is_binary(x), do: x
 
-end 
+end

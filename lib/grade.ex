@@ -16,10 +16,10 @@ defmodule PlugLti.Grade do
 
   def call(url, sourcedId, score) do
     contents = gen_contents(sourcedId, score)
-    param_base = params(contents) 
+    param_base = params(contents)
 
-    signature = ["POST", url, param_base |> PlugLti.proc_params] 
-      |> Enum.map(&(URI.encode_www_form/1))
+    signature = ["POST", url, param_base |> PlugLti.proc_params]
+      |> Enum.map(&(:http_uri.encode/1))
       |> Enum.join("&")
       |> PlugLti.hmac_signature
 
@@ -29,10 +29,10 @@ defmodule PlugLti.Grade do
     |> Enum.map(fn {k, v} -> "#{k}=\"#{param_value(v)}\"" end)
     |> Enum.join(",")
 
-    case HTTPoison.request(:post, url , contents, 
-      [{:Accept, "application/xml"}, {:Authorization, 
+    case HTTPoison.request(:post, url , contents,
+      [{:Accept, "application/xml"}, {:Authorization,
         "OAuth realm=\"\"," <> paramstr}]) do
-      {:ok, %{body: body}} -> 
+      {:ok, %{body: body}} ->
         if String.contains?(body, "<imsx_codeMajor>success</imsx_codeMajor>") do
           :ok
         else
@@ -45,7 +45,7 @@ defmodule PlugLti.Grade do
   def param_value(x) do
     x
     |> PlugLti.ensure_string
-    |> URI.encode_www_form
+    |> :http_uri.encode
   end
 
   def params(contents) do
