@@ -1,5 +1,7 @@
-%{"hackney": {:hex, :hackney, "1.1.0"},
-  "httpoison": {:hex, :httpoison, "0.7.0"},
-  "idna": {:hex, :idna, "1.0.2"},
-  "plug": {:hex, :plug, "1.0.3"},
-  "ssl_verify_hostname": {:hex, :ssl_verify_hostname, "1.0.5"}}
+%{
+  "hackney": {:hex, :hackney, "1.1.0", "e999ef5fbd9d199b00953b26cbcb4396402e8e4fca6d2c48501253d98bd63723", [:make, :rebar], [{:idna, "~> 1.0", [hex: :idna, repo: "hexpm", optional: false]}, {:ssl_verify_hostname, "~> 1.0", [hex: :ssl_verify_hostname, repo: "hexpm", optional: false]}], "hexpm"},
+  "httpoison": {:hex, :httpoison, "0.7.0", "1050c58442798b8a3a8aa32f19d3e322130fff955991249266a2d24c3ea1c83e", [:mix], [{:hackney, "~> 1.0", [hex: :hackney, repo: "hexpm", optional: false]}], "hexpm"},
+  "idna": {:hex, :idna, "1.0.2", "397e3d001c002319da75759b0a81156bf11849c71d565162436d50020cb7265e", [:make], [], "hexpm"},
+  "plug": {:hex, :plug, "1.0.3", "8bbcbdaa4cb15170b9a15cb12153e8a6d9e176ce78e4c1990ea0b505b0ca24a0", [:mix], [{:cowboy, "~> 1.0", [hex: :cowboy, repo: "hexpm", optional: true]}], "hexpm"},
+  "ssl_verify_hostname": {:hex, :ssl_verify_hostname, "1.0.5", "2e73e068cd6393526f9fa6d399353d7c9477d6886ba005f323b592d389fb47be", [:make], [], "hexpm"},
+}

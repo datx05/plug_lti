@@ -29,9 +29,11 @@ defmodule PlugLti.Grade do
     |> Enum.map(fn {k, v} -> "#{k}=\"#{param_value(v)}\"" end)
     |> Enum.join(",")
 
-    case HTTPoison.request(:post, url , contents,
-      [{:Accept, "application/xml"}, {:Authorization,
-        "OAuth realm=\"\"," <> paramstr}]) do
+    case HTTPoison.request(:post, url, contents, [
+        {:Accept, "application/xml"},
+        {:Authorization, "OAuth realm=\"\"," <> paramstr},
+        {"Content-Type", "application/xml"}
+      ]) do
       {:ok, %{body: body}} ->
         if String.contains?(body, "<imsx_codeMajor>success</imsx_codeMajor>") do
           :ok
@@ -57,11 +59,11 @@ defmodule PlugLti.Grade do
       "oauth_signature_method" => "HMAC-SHA1",
       "oauth_version"          => "1.0",
       "oauth_body_hash"        => :crypto.hash(:sha, contents) |> Base.encode64,
-      "oauth_timestamp"        => timestamp
+      "oauth_timestamp"        => timestamp()
     }
   end
 
-  def timestamp do
+  def timestamp() do
     {mgsec, sec, _mcs} = :os.timestamp
 
     mgsec * 1_000_000 + sec
@@ -72,6 +74,6 @@ defmodule PlugLti.Grade do
     """
     <?xml version="1.0" encoding="UTF-8"?><imsx_POXEnvelopeRequest xmlns="http://www.imsglobal.org/services/ltiv1p1/xsd/imsoms_v1p0"><imsx_POXHeader><imsx_POXRequestHeaderInfo><imsx_version>V1.0</imsx_version><imsx_messageIdentifier>769f985c-5a04-4822-899f-cb34b6454e4a</imsx_messageIdentifier></imsx_POXRequestHeaderInfo></imsx_POXHeader><imsx_POXBody><replaceResultRequest><resultRecord><sourcedGUID><sourcedId>#{sourcedId}</sourcedId></sourcedGUID><result><resultScore><language>en</language><textString>#{score}</textString></resultScore></result></resultRecord></replaceResultRequest></imsx_POXBody></imsx_POXEnvelopeRequest>
     """
-    |> String.strip
+    |> String.trim
   end
 end
