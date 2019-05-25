@@ -13,7 +13,7 @@ defmodule PlugLti do
   except an initial LTI request to have an csrf token.
   """
 
-  use Behaviour
+  # use Behaviour
   @behaviour Plug
   alias Plug.Conn
 
@@ -30,6 +30,7 @@ defmodule PlugLti do
 
   @exclude_params ["format", "oauth_signature"]
 
+  @impl true
   def init([]), do: []
 
   defp req_url(%Plug.Conn{scheme: scheme, host: host, port: port} = conn) do
@@ -39,17 +40,23 @@ defmodule PlugLti do
       host = conn
         |> Conn.get_req_header("x-forwarded-host")
         |> List.first() || host
-        
-      scheme = conn
-        |> Conn.get_req_header("x-forwarded-proto")
-        |> List.first()
-        |> String.to_atom() || scheme
-        
-      port = conn
-        |> Conn.get_req_header("x-forwarded-port")
-        |> List.first()
-        |> String.to_integer() || port
-      
+
+      scheme =
+        case conn
+          |> Conn.get_req_header("x-forwarded-proto")
+          |> List.first() do
+            nil -> scheme
+            scheme -> String.to_atom(scheme)
+        end
+
+      port = 
+        case conn
+          |> Conn.get_req_header("x-forwarded-port")
+          |> List.first() do
+            nil -> port
+            port -> String.to_integer(port)
+          end
+
       port_repr = case {scheme, port} do
         {:http, 80} -> ""
         {:https, 443} -> ""
@@ -60,6 +67,7 @@ defmodule PlugLti do
     end
   end
 
+  @impl true
   def call(conn, _) do
     if Application.get_env(:plug_lti, :plug_disabled) do
       Logger.warn("LTI signature verification disabled")
@@ -94,8 +102,6 @@ defmodule PlugLti do
       e in [MissingSecret] ->
         Logger.info "PlugLti: " <> Exception.message(e)
         Conn.halt(conn)
-
-     e -> raise e
     end
   end
 
