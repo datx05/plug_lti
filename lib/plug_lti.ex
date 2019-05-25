@@ -36,6 +36,20 @@ defmodule PlugLti do
     if env = Application.get_env(:plug_lti, :base_url) do
       "#{env}#{conn.request_path}"
     else
+      host = conn
+        |> Conn.get_req_header("x-forwarded-host")
+        |> List.first() || host
+        
+      scheme = conn
+        |> Conn.get_req_header("x-forwarded-proto")
+        |> List.first()
+        |> String.to_atom() || scheme
+        
+      port = conn
+        |> Conn.get_req_header("x-forwarded-port")
+        |> List.first()
+        |> String.to_integer() || port
+      
       port_repr = case {scheme, port} do
         {:http, 80} -> ""
         {:https, 443} -> ""
